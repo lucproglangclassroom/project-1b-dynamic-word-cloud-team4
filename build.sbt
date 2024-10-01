@@ -11,7 +11,7 @@ coverageEnabled := true
 libraryDependencies ++= Seq(
   "org.scalatest"  %% "scalatest"  % "3.2.19"  % Test,
   "org.scalacheck" %% "scalacheck" % "1.18.0"  % Test,
-  "com.lihaoyi"    %% "mainargs"   % "0.4.0"   // Make sure the version is correct
+  "com.lihaoyi"    %% "mainargs"   % "0.7.5"   // Make sure the version is correct
 )
 testOptions in Test += Tests.Argument("-oDF")
 
