@@ -33,7 +33,7 @@ class MainTest extends AnyFlatSpec with Matchers {
     val expectedFrequencies = Map("hello" -> 3, "world" -> 2)
 
     // Check the printed word cloud for correct frequencies
-    mockOutput.printedWordCloud shouldEqual expectedFrequencies
+    mockOutput.printedWordCloud.toMap shouldEqual expectedFrequencies
 
 
     // Check the printed word cloud
