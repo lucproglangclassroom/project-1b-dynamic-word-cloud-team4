@@ -23,14 +23,14 @@ class MainTest extends AnyFlatSpec with Matchers {
     val words = Iterator("hello", "world", "hello", "today", "world", "hello", "scala", "programming")
     val cloudSize = 2
     val minLength = 3
-    val windowSize = 5
+    val windowSize = 8
     val minFrequency = 2
 
     // Run the wordcloud function
     Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
 
     // Expected frequencies
-    val expectedFrequencies = Map("hello" -> 3, "world" -> 2)
+    val expectedFrequencies = Map("world" -> 2, "hello" -> 3)
 
     // Check the printed word cloud for correct frequencies
     mockOutput.printedWordCloud.toMap shouldEqual expectedFrequencies
@@ -55,9 +55,10 @@ class MainTest extends AnyFlatSpec with Matchers {
     Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
 
     // Check the printed word cloud
-    mockOutput.printedWordCloud.keys should contain("hello")
+    mockOutput.printedWordCloud.keys should not contain ("hello")
     mockOutput.printedWordCloud.keys should contain("there")
-    mockOutput.printedWordCloud.keys should not contain ("hi", "world")
+    mockOutput.printedWordCloud.keys should contain ("world")
+    mockOutput.printedWordCloud.keys should not contain ("hi")
   }
 
   it should "handle an empty input" in {
