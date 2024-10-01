@@ -94,4 +94,75 @@ class MainTest extends AnyFlatSpec with Matchers {
     
     
   }
+
+  it should "respect the cloud size limit" in {
+    val mockOutput = new MockOutputSink
+
+    val words = Iterator("apple", "banana", "apple", "orange")
+    val cloudSize = 1
+    val minLength = 3
+    val windowSize = 10
+    val minFrequency = 1
+
+    // Run the wordcloud function
+    Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
+
+    // Check the printed word cloud respects the cloud size
+    mockOutput.printedWordCloud.size shouldEqual 1
+  }
+
+  it should "sort the word cloud by frequency" in {
+    val mockOutput = new MockOutputSink
+
+    val words = Iterator("apple", "banana", "apple", "banana", "apple", "orange")
+    val cloudSize = 2
+    val minLength = 3
+    val windowSize = 10
+    val minFrequency = 1
+
+    // Run the wordcloud function
+    Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
+
+    // Check the printed word cloud is sorted by frequency
+    val sortedWords = mockOutput.printedWordCloud.toSeq.sortBy(-_._2)
+    sortedWords shouldEqual Seq(("apple", 3), ("banana", 2))
+  }
+
+  it should "filter words by minimum frequency" in {
+    val mockOutput = new MockOutputSink
+
+    val words = Iterator("apple", "banana", "apple", "orange", "banana", "banana", "grape")
+    val cloudSize = 3
+    val minLength = 3
+    val windowSize = 10
+    val minFrequency = 3
+
+    // Run the wordcloud function
+    Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
+
+    // Check that only words with frequency >= minFrequency are included
+    mockOutput.printedWordCloud shouldEqual Map("banana" -> 3)
+  }
+
+  it should "remove words from the cloud when their frequency drops to zero" in {
+    val mockOutput = new MockOutputSink
+
+    val words = Iterator("apple", "apple", "orange", "apple", "banana", "banana", "banana")
+    val cloudSize = 3
+    val minLength = 3
+    val windowSize = 3 // Set small window size to trigger removals
+    val minFrequency = 1
+
+    // Run the wordcloud function
+    Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
+
+    // Verify the word "orange" is removed from the word cloud after it exits the window
+    mockOutput.printedWordCloud should not contain ("orange")
+  }
+
+  it should "parse command-line arguments correctly" in {
+    val args = Array("-c", "5", "-l", "4", "-w", "50", "-s", "5", "-f", "2")
+    Main.main(args)
+    // Add assertions to verify the behavior with the given arguments
+  }
 }

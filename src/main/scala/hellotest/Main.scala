@@ -21,7 +21,6 @@ object Main:
   // External entry point into the Scala application
   def main(args: Array[String]): Unit = 
     ParserForMethods(this).runOrExit(args.toIndexedSeq)
-    ()
 
   // Internal main method with arguments annotated for parsing
   @main
