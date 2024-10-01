@@ -11,5 +11,7 @@ libraryDependencies ++= Seq(
   "org.scalacheck" %% "scalacheck" % "1.18.0"  % Test,
   "com.lihaoyi"    %% "mainargs"   % "0.4.0"   // Make sure the version is correct
 )
+testOptions in Test += Tests.Argument("-oDF")
+
 
 enablePlugins(JavaAppPackaging)

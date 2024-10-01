@@ -45,7 +45,7 @@ object Main:
     // Create an instance of OutputToConsole
     val output = new OutputToConsole
 
-    // Example words, this could come from any source (file, stdin, etc.)
+    // Example words
     val words = Iterator("hello", "world", "hello", "today", "world", "hello", "scala", "programming")
 
     // Call the wordcloud function with all required parameters
@@ -54,40 +54,49 @@ object Main:
   
   // Word cloud generation logic
   def wordcloud(
-      words: Iterator[String], 
-      cloudSize: Int, 
-      minLength: Int, 
-      windowSize: Int, 
-      minFrequency: Int, 
-      output: OutputSink
-  ): Unit =
+    words: Iterator[String], 
+    cloudSize: Int, 
+    minLength: Int, 
+    windowSize: Int, 
+    minFrequency: Int, 
+    output: OutputSink
+  ): Unit = {
     val window = new mutable.Queue[String]()
     val wordFrequencies = mutable.Map[String, Int]()
     
     words.foreach { word =>
       if (word.length >= minLength) {  // Check minimum length
+        // Add word to the sliding window
         window.enqueue(word)
         
+        // Update the frequency for the current word
+        wordFrequencies(word) = wordFrequencies.getOrElse(word, 0) + 1
+
+        // Maintain the size of the sliding window
         if (window.size > windowSize) {
+          // Remove the oldest word from the window
           val removedWord = window.dequeue()
-          wordFrequencies(removedWord) = wordFrequencies.getOrElse(removedWord, 0) - 1
-          if (wordFrequencies(removedWord) <= 0) {
-            wordFrequencies.remove(removedWord)
+          
+          // Decrement its frequency in the map
+          if (wordFrequencies.contains(removedWord)) {
+            wordFrequencies(removedWord) -= 1
+
+            // If frequency drops to zero, remove it from the map
+            if (wordFrequencies(removedWord) <= 0) {
+              wordFrequencies.remove(removedWord)
+            }
           }
         }
-
-        // Update frequencies for sliding window
-        wordFrequencies(word) = wordFrequencies.getOrElse(word, 0) + 1
-        
-        // Generate and output word cloud
-        val sortedWords = wordFrequencies.toSeq
-          .filter(_._2 >= minFrequency)
-          .sortBy(-_._2)
-          .take(cloudSize)
-          .toMap
-        
-        output.print(sortedWords)
       }
     }
+    
+    // Generate and output the word cloud
+    val sortedWords = wordFrequencies.toSeq
+      .filter(_._2 >= minFrequency) // Only include words meeting the minimum frequency
+      .sortBy(-_._2) // Sort by frequency descending
+      .take(cloudSize) // Take the top N words based on cloud size
+      .toMap // Convert back to a Map
 
+    output.print(sortedWords)
+  }
 end Main
