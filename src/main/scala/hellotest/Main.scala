@@ -67,13 +67,17 @@ object Main:
     words.foreach { word =>
       if (word.length >= minLength) {  // Check minimum length
         window.enqueue(word)
-        if (window.size > windowSize) window.dequeue()
-
-        // Update frequencies
-        wordFrequencies.clear()
-        window.foreach { w => 
-          wordFrequencies(w) = wordFrequencies.getOrElse(w, 0) + 1
+        
+        if (window.size > windowSize) {
+          val removedWord = window.dequeue()
+          wordFrequencies(removedWord) = wordFrequencies.getOrElse(removedWord, 0) - 1
+          if (wordFrequencies(removedWord) <= 0) {
+            wordFrequencies.remove(removedWord)
+          }
         }
+
+        // Update frequencies for sliding window
+        wordFrequencies(word) = wordFrequencies.getOrElse(word, 0) + 1
         
         // Generate and output word cloud
         val sortedWords = wordFrequencies.toSeq
