@@ -10,7 +10,7 @@ trait OutputSink:
 // OutputSink that prints to the console
 class OutputToConsole extends OutputSink:
   override def print(wordCloud: Map[String, Int]): Unit =
-    println("Word cloud:")
+    println("Word cloud: ")
     wordCloud.foreach { case (word, count) =>
       println(s"$word: $count")
     }
@@ -61,9 +61,28 @@ object Main:
     minFrequency: Int, 
     output: OutputSink
   ): Unit = {
-    val window = new mutable.Queue[String]()
-    val wordFrequencies = mutable.Map[String, Int]()
+    // sliding window implemented using scanLeft
+    val slidingWindows = words
+      .filter(_.length >= minLength) // filter by word length
+      .scanLeft(List.empty[String]) {(window, word) =>
+        (word :: window).take(windowSize) // keep the window size fixeed
+      }
+
+    // calculate word frequencies and generate word cloud for each sliding window
+    val wordClouds = slidingWindows.map { window =>
+      window.groupBy(identity) // group by word
+        .view.mapValues(_.size) // count occurrences
+        .filter(_._2 >= minFrequency) // filter by minimum frequency
+        .toMap
+        .toSeq.sortBy(-_._2) // sort by frequency
+        .take(cloudSize) // take top N words
+        .toMap // convert back to map for output
+    }
+
+    // output the final word cloud 
+    wordClouds.foreach(output.print)
     
+   /* 
     words.foreach { word =>
       if (word.length >= minLength) {  // Check minimum length
         // Add word to the sliding window
@@ -89,7 +108,9 @@ object Main:
         }
       }
     }
+      */
     
+   /*
     // Generate and output the word cloud
     val sortedWords = wordFrequencies.toSeq
       .filter(_._2 >= minFrequency) // Only include words meeting the minimum frequency
@@ -98,5 +119,6 @@ object Main:
       .toMap // Convert back to a Map
 
     output.print(sortedWords)
+    */
   }
 end Main

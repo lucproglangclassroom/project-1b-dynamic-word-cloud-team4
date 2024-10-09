@@ -4,6 +4,7 @@ import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import scala.collection.immutable.Map // Use immutable Map to match the OutputSink trait
 import hellotest.{Main, OutputSink}
+import java.{util => ju}
 
 class MainTest extends AnyFlatSpec with Matchers {
 
@@ -165,6 +166,24 @@ class MainTest extends AnyFlatSpec with Matchers {
     val args = Array("-c", "5", "-l", "4", "-w", "50", "-s", "5", "-f", "2")
     Main.main(args)
     // Add assertions to verify the behavior with the given arguments
+  }
+
+  it should "handle large streams efficiently" in {
+    val mockOutput = new MockOutputSink
+
+    // create a large stream of repeated words
+    val words = Iterator.fill(50)("banana") ++ Iterator.fill(51)("kiwi")
+    val cloudSize = 5
+    val minLength = 4
+    val windowSize = 100
+    val minFrequency = 1
+
+    // run the wordcloud function
+    Main.wordcloud(words, cloudSize, minLength, windowSize, minFrequency, mockOutput)
+
+    // check that the word cloud handles large input without crashing
+    mockOutput.printedWordCloud.keys should contain ("banana")
+    mockOutput.printedWordCloud.keys should contain ("kiwi")
   }
 
 }
