@@ -1,7 +1,6 @@
 package hellotest
 
 import mainargs.{main, arg, ParserForMethods}
-import scala.collection.mutable
 
 // Define OutputSink for output handling
 trait OutputSink:
@@ -49,54 +48,58 @@ object Main:
     val words = Iterator("hello", "world", "hello", "today", "world", "hello", "scala", "programming")
 
     // Call the wordcloud function with all required parameters
-    wordcloud(words, cloudSize, minLength, windowSize, minFrequency, output)
+    wordcloud(words, cloudSize, minLength, windowSize, minFrequency, everyKSteps, output)
 
   
-  // Word cloud generation logic
+  // Word cloud generation logic as functional
   def wordcloud(
-    words: Iterator[String], 
-    cloudSize: Int, 
-    minLength: Int, 
-    windowSize: Int, 
-    minFrequency: Int, 
-    output: OutputSink
-  ): Unit = {
-    val window = new mutable.Queue[String]()
-    val wordFrequencies = mutable.Map[String, Int]()
-    
-    words.foreach { word =>
-      if (word.length >= minLength) {  // Check minimum length
-        // Add word to the sliding window
-        window.enqueue(word)
-        
-        // Update the frequency for the current word
-        wordFrequencies(word) = wordFrequencies.getOrElse(word, 0) + 1
+      words: Iterator[String], 
+      cloudSize: Int, 
+      minLength: Int, 
+      windowSize: Int, 
+      minFrequency: Int, 
+      everyKSteps: Int,
+      output: OutputSink
+  ): Unit =
+    case class State(window: List[String], freqMap: Map[String, Int])
+    // Function to update state (window and frequency map) as we scan through words
+    def updateState(state: State, word: String): State =
+      val filteredWord = word.length >= minLength
+      val updatedWindow = if (filteredWord) word :: state.window else state.window
+      val window = if (updatedWindow.length > windowSize) updatedWindow.take(windowSize) else updatedWindow
 
-        // Maintain the size of the sliding window
-        if (window.size > windowSize) {
-          // Remove the oldest word from the window
-          val removedWord = window.dequeue()
-          
-          // Decrement its frequency in the map
-          if (wordFrequencies.contains(removedWord)) {
-            wordFrequencies(removedWord) -= 1
+      // Remove the word that was dequeued (FIFO behavior)
+      val dequeuedWord = if (updatedWindow.length > windowSize) Some(updatedWindow(windowSize)) else None
 
-            // If frequency drops to zero, remove it from the map
-            if (wordFrequencies(removedWord) <= 0) {
-              wordFrequencies.remove(removedWord)
-            }
-          }
-        }
-      }
+      // Update frequency map
+      val updatedFreqMap = state.freqMap
+        .updated(word, state.freqMap.getOrElse(word, 0) + 1)
+        .updated(dequeuedWord.getOrElse(""), 0) // Remove the dequeued word if it exists
+
+      // Clean up the freqMap to remove words with zero count
+      val finalFreqMap = updatedFreqMap.filter(_._2 > 0)
+
+      State(window, finalFreqMap)
+
+    // Scan through words and update state at each step
+    val initialState = State(Nil, Map.empty[String, Int])
+
+    // Process each word and update the state
+    val states = words.scanLeft(initialState)(updateState)
+
+    // Generate and output the word cloud at each step
+    states.zipWithIndex.foreach { case (state, index) =>
+      val freqMap = state.freqMap
+      // Generate word cloud from the frequency map, filtering by minFrequency and taking the top `cloudSize`
+      val sortedWords = freqMap.toSeq
+        .filter(_._2 >= minFrequency)
+        .sortBy(-_._2)
+        .take(cloudSize)
+        .toMap
+
+      // Output the word cloud if needed
+      if (index % everyKSteps == 0) // Only output every K steps
+        output.print(sortedWords)
     }
-    
-    // Generate and output the word cloud
-    val sortedWords = wordFrequencies.toSeq
-      .filter(_._2 >= minFrequency) // Only include words meeting the minimum frequency
-      .sortBy(-_._2) // Sort by frequency descending
-      .take(cloudSize) // Take the top N words based on cloud size
-      .toMap // Convert back to a Map
 
-    output.print(sortedWords)
-  }
 end Main
