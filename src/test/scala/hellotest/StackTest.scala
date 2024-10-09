@@ -172,10 +172,10 @@ class MainTest extends AnyFlatSpec with Matchers {
     val mockOutput = new MockOutputSink
 
     // create a large stream of repeated words
-    val words = Iterator.fill(50)("banana") ++ Iterator.fill(51)("kiwi")
+    val words = Iterator.fill(300)("banana") ++ Iterator.fill(300)("kiwi")
     val cloudSize = 5
     val minLength = 4
-    val windowSize = 100
+    val windowSize = 400
     val minFrequency = 1
 
     // run the wordcloud function
@@ -185,5 +185,4 @@ class MainTest extends AnyFlatSpec with Matchers {
     mockOutput.printedWordCloud.keys should contain ("banana")
     mockOutput.printedWordCloud.keys should contain ("kiwi")
   }
-
 }

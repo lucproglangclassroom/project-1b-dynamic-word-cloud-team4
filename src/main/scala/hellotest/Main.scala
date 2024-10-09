@@ -19,7 +19,6 @@ object Main:
 
   // External entry point into the Scala application
   def main(args: Array[String]): Unit = 
-    //ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ParserForMethods(Main).runOrExit(args.toIndexedSeq)
 
   // Internal main method with arguments annotated for parsing
@@ -48,7 +47,7 @@ object Main:
     val words = Iterator("hello", "world", "hello", "today", "world", "hello", "scala", "programming")
 
     // Call the wordcloud function with all required parameters
-    wordcloud(words, cloudSize, minLength, windowSize, minFrequency, everyKSteps, output)
+    wordcloud(words, cloudSize, minLength, windowSize, minFrequency, output)
 
   
   // Word cloud generation logic as functional
@@ -57,49 +56,30 @@ object Main:
       cloudSize: Int, 
       minLength: Int, 
       windowSize: Int, 
-      minFrequency: Int, 
-      everyKSteps: Int,
+      minFrequency: Int,
       output: OutputSink
-  ): Unit =
-    case class State(window: List[String], freqMap: Map[String, Int])
-    // Function to update state (window and frequency map) as we scan through words
-    def updateState(state: State, word: String): State =
-      val filteredWord = word.length >= minLength
-      val updatedWindow = if (filteredWord) word :: state.window else state.window
-      val window = if (updatedWindow.length > windowSize) updatedWindow.take(windowSize) else updatedWindow
-
-      // Remove the word that was dequeued (FIFO behavior)
-      val dequeuedWord = if (updatedWindow.length > windowSize) Some(updatedWindow(windowSize)) else None
-
-      // Update frequency map
-      val updatedFreqMap = state.freqMap
-        .updated(word, state.freqMap.getOrElse(word, 0) + 1)
-        .updated(dequeuedWord.getOrElse(""), 0) // Remove the dequeued word if it exists
-
-      // Clean up the freqMap to remove words with zero count
-      val finalFreqMap = updatedFreqMap.filter(_._2 > 0)
-
-      State(window, finalFreqMap)
-
-    // Scan through words and update state at each step
-    val initialState = State(Nil, Map.empty[String, Int])
-
-    // Process each word and update the state
-    val states = words.scanLeft(initialState)(updateState)
-
-    // Generate and output the word cloud at each step
-    states.zipWithIndex.foreach { case (state, index) =>
-      val freqMap = state.freqMap
-      // Generate word cloud from the frequency map, filtering by minFrequency and taking the top `cloudSize`
-      val sortedWords = freqMap.toSeq
-        .filter(_._2 >= minFrequency)
-        .sortBy(-_._2)
-        .take(cloudSize)
+    ): Unit = {
+    
+    // sliding window implemented using scanLeft
+    val slidingWindows = words
+      .filter(_.length >= minLength) // filter by word length
+      .scanLeft(List.empty[String]) {(window, word) =>
+        (word :: window).take(windowSize) // keep the window size fixed
+      }
+    
+    // calculate word frequencies and generate word cloud for each sliding window
+    val wordClouds = slidingWindows.map{window =>
+      window.groupBy(identity) // group by word
+        .view.mapValues(_.size) // count occurrences
+        .filter(_._2 >= minFrequency) // filter by minimum frequency
         .toMap
-
-      // Output the word cloud if needed
-      if (index % everyKSteps == 0) // Only output every K steps
-        output.print(sortedWords)
+        .toSeq.sortBy(-_._2) // sort by frequency
+        .take(cloudSize) // take top n words
+        .toMap // convert back to map for output
     }
+    // output the final word cloud
+    wordClouds.foreach(output.print)
+  
+  }
 
 end Main
