@@ -166,6 +166,13 @@ class MainTest extends AnyFlatSpec with Matchers {
     val args = Array("-c", "5", "-l", "4", "-w", "50", "-s", "5", "-f", "2")
     Main.main(args)
     // Add assertions to verify the behavior with the given arguments
+    val cloudSize = 5
+    val minLength = 4
+    val windowSize = 50
+    val stepsBetweenUpdates = 5
+    val minFrequency = 2
+    
+    Main.main(args)
   }
 
   it should "handle large streams efficiently" in {
