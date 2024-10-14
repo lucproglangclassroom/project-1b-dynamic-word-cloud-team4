@@ -28,7 +28,7 @@ object Main:
     @arg(short = 'l', doc = "minimum word length to be considered") minLength: Int = 6,
     @arg(short = 'w', doc = "size of the sliding FIFO queue") windowSize: Int = 1000,
     @arg(short = 's', doc = "number of steps between word cloud updates") everyKSteps: Int = 10,
-    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 2
+    @arg(short = 'f', doc = "minimum frequency for a word to be included in the cloud") minFrequency: Int = 3
   ): Unit =
   
     println("Welcome to the Word Cloud Generator!")
