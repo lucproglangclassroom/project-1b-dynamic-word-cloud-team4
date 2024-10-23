@@ -8,3 +8,6 @@ tasks:
       sdk install java 21.0.4-tem
       sdk install sbt
       sbt "Test / compile"
+
+image:
+  file: .gitpod.Dockerfile
