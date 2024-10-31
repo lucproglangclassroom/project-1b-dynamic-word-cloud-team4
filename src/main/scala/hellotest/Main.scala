@@ -2,6 +2,8 @@ package hellotest
 
 import mainargs.{main, arg, ParserForMethods}
 import scala.collection.mutable
+import scala.io.Source // Import for reading files
+import scala.language.unsafeNulls
 
 // Define OutputSink for output handling
 trait OutputSink:
@@ -20,7 +22,6 @@ object Main:
 
   // External entry point into the Scala application
   def main(args: Array[String]): Unit = 
-    //ParserForMethods(this).runOrExit(args.toIndexedSeq)
     ParserForMethods(Main).runOrExit(args.toIndexedSeq)
 
   // Internal main method with arguments annotated for parsing
@@ -45,8 +46,15 @@ object Main:
     // Create an instance of OutputToConsole
     val output = new OutputToConsole
 
-    // Example words
-    val words = Iterator("hello", "world", "hello", "today", "world", "hello", "scala", "programming")
+    val words = for {
+      line <- Source.stdin.getLines()
+      word <- line.split("(?U)[^\\p{Alpha}0-9']+").toList
+      if word != null && word.nonEmpty
+    } yield word
+
+    // Print the words read for debugging
+    println("Words read from input:")
+    words.foreach(println)
 
     // Call the wordcloud function with all required parameters
     wordcloud(words, cloudSize, minLength, windowSize, minFrequency, output)
@@ -65,6 +73,7 @@ object Main:
     val wordFrequencies = mutable.Map[String, Int]()
     
     words.foreach { word =>
+      println(s"Processing word: $word") // Debugging output
       if (word.length >= minLength) {  // Check minimum length
         // Add word to the sliding window
         window.enqueue(word)
@@ -76,6 +85,7 @@ object Main:
         if (window.size > windowSize) {
           // Remove the oldest word from the window
           val removedWord = window.dequeue()
+          println(s"Removing word from window: $removedWord") // Debugging output
           
           // Decrement its frequency in the map
           if (wordFrequencies.contains(removedWord)) {
